@@ -1,14 +1,14 @@
 ctransformers:
   model_path:
     small: "./models/mistral-7b-instruct-v0.1.Q3_K_M.gguf"
-    large:  "./models/mistral-7b-instruct-v0.1.Q5_K_M.gguf"
+    large:  "./models/mistral-7b-instruct-v0.1.Q3_K_L.gguf"
 
   model_type: "mistral"
   model_config: 
     'max_new_tokens': 256
     'temperature' : 0.2
     'context_length': 2048
-    'gpu_layers' : 0 # 32 to put all mistral layers on GPU, might differ for other models
+    'gpu_layers' : 100 # 32 to put all mistral layers on GPU, might differ for other models
     'threads' : -1
 
 chat_config:
@@ -16,8 +16,8 @@ chat_config:
   number_of_retrieved_documents: 3
 
 pdf_text_splitter:
-  chunk_size: 1024 # number of characters 1024 roughly equels 256 tokens
-  overlap: 50
+  chunk_size: 512 # number of characters 1024 roughly equels 256 tokens
+  overlap: 256
   separators: ["\n", "\n\n"]
 
 llava_model:

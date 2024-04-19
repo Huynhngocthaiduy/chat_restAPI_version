@@ -7,9 +7,14 @@ from langchain.prompts import PromptTemplate
 from langchain_community.llms import CTransformers
 from langchain_community.vectorstores import Chroma
 from langchain_community.llms import Ollama
+from langchain import HuggingFacePipeline, PromptTemplate
+from transformers import AutoTokenizer, TextStreamer, pipeline
+from auto_gptq import AutoGPTQForCausalLM
 from operator import itemgetter
 from utils import load_config
 import chromadb
+import torch
+DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
 
 config = load_config()
 
@@ -18,11 +23,39 @@ def load_ollama_model():
     return llm
 
 def create_llm(model_path = config["ctransformers"]["model_path"]["large"], model_type = config["ctransformers"]["model_type"], model_config = config["ctransformers"]["model_config"]):
-    llm = CTransformers(model=model_path, model_type=model_type, config=model_config)
+#    llm = CTransformers(model=model_path, model_type=model_type, config=model_config)
+    model_name_or_path = "TheBloke/Llama-2-13B-chat-GPTQ"
+    model_basename = "model"
+    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, use_fast=True)
+
+    model = AutoGPTQForCausalLM.from_quantized(
+        model_name_or_path,
+        revision="gptq-4bit-128g-actorder_True",
+        model_basename=model_basename,
+        use_safetensors=True,
+        trust_remote_code=True,
+        inject_fused_attention=False,
+        device=DEVICE,
+        quantize_config=None,
+    )
+    
+
+    text_pipeline = pipeline(
+        "text-generation",
+        model=model,
+        tokenizer=tokenizer,
+        max_new_tokens=1024,
+        temperature=0,
+        top_p=0.95,
+        repetition_penalty=1.15,
+      
+    )
+    llm = HuggingFacePipeline(pipeline=text_pipeline, model_kwargs={"temperature": 0})
     return llm
 
-def create_embeddings(embeddings_path = config["embeddings_path"]):
-    return HuggingFaceInstructEmbeddings(model_name=embeddings_path)
+
+def create_embeddings():
+    return HuggingFaceInstructEmbeddings(model_name="hkunlp/instructor-large",model_kwargs={"device": DEVICE})
 
 def create_chat_memory(chat_history):
     return ConversationBufferWindowMemory(memory_key="history", chat_memory=chat_history, k=3)

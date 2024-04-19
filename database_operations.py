@@ -27,21 +27,9 @@ def save_text_message(chat_history_id, sender_type, text):
 
     conn.commit()
 
-def save_image_message(chat_history_id, sender_type, image_bytes):
-    conn, cursor = get_db_connection_and_cursor()
 
-    cursor.execute('INSERT INTO messages (chat_history_id, sender_type, message_type, blob_content) VALUES (?, ?, ?, ?)',
-                   (chat_history_id, sender_type, 'image', sqlite3.Binary(image_bytes)))
 
-    conn.commit()
 
-def save_audio_message(chat_history_id, sender_type, audio_bytes):
-    conn, cursor = get_db_connection_and_cursor()
-
-    cursor.execute('INSERT INTO messages (chat_history_id, sender_type, message_type, blob_content) VALUES (?, ?, ?, ?)',
-                   (chat_history_id, sender_type, 'audio', sqlite3.Binary(audio_bytes)))
-
-    conn.commit()
 
 def load_messages(chat_history_id):
     conn, cursor = get_db_connection_and_cursor()
